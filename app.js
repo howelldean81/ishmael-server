@@ -1,50 +1,29 @@
 require("dotenv").config();
 
-const { Sequelize, DataTypes } = require("sequelize");
-const sequelize = new Sequelize(
-  process.env.DB_DBNAME,
-  process.env.DB_USER,
-  process.env.DB_PASS,
-  {
-    host: process.env.DB_HOST,
-    dialect: "postgres",
-  }
-);
+const express = require('express');
+const app = express();
+const port = 3011
 
-// Users Table
-const User = sequelize.define("User", {
-    username: {
-        type: DataTypes.STRING
-    }
-});
 
-// Book Table
-const Book = sequelize.define("Book", {
-    location: {
-        type: DataTypes.STRING
-    }
-});
+// const controllers = require('./controllers')
+const upload = require("./middleware/multer");
 
-// Metadata Table
-const Metadata = sequelize.define("Metadata", {
-    title: {
-        type: DataTypes.STRING
-    },
-    author: {
-        type: DataTypes.STRING
-    },
-    published: {
-        type: DataTypes.INTEGER
-    }
-});
+;(async() => {
+    app.use(express.json())
 
-// Associations
-User.hasMany(Book);
-Book.belongsTo(User);
-Book.hasOne(Metadata);
-Metadata.belongsTo(Book);
+    const user = require('./controllers/userController')
+    app.use("/user", user)
+  
+    const auth = require('./controllers/Auth')
+    app.use("/auth", auth)
 
-// I think this syncs the database every time a change is saved.
-(async () => {
-    await sequelize.sync({force: true});
-})();
+    app.post("/albumcover", upload.single("image"), (req, res) => {
+      console.log(req.file)
+      coverName = res.req.file.filename
+      res.send(coverName)
+  })
+  
+    app.listen(port, () => {
+      console.log(`Example app listening at http://localhost:${port}`)
+    })
+  })()
